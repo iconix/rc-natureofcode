@@ -145,7 +145,7 @@ function draw() {
   const pps = 5;  // "paint per second"
 
   // paint every {pps} seconds, starting at frame {pps}
-  if (frameCount % (fps * pps) === pps) {
+  if (frameCount % (fps * pps) === Math.ceil(pps)) {
     const numDroplets = 1000;
     const impactPoint = createRandomImpactPoint();
     const newDroplets = createSplatter(numDroplets, impactPoint);
