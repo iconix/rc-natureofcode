@@ -91,19 +91,26 @@ function createPaintColor() {
   const brightest = max(r, g, b);
   if (brightest < 200) {
     const brightChannel = floor(random(3));
-    if (brightChannel === 0) r = random(200, 255);
-    else if (brightChannel === 1) g = random(200, 255);
-    else b = random(200, 255);
+    if (brightChannel === 0) r = random(220, 255);
+    else if (brightChannel === 1) g = random(220, 255);
+    else b = random(220, 255);
   }
 
   // dark channel
   const darkest = min(r, g, b);
   if (darkest > 100) {
     const darkChannel = floor(random(3));
-    if (darkChannel === 0) r = random(0, 100);
-    else if (darkChannel === 1) g = random(0, 100);
-    else b = random(0, 100);
+    if (darkChannel === 0) r = random(0, 35);
+    else if (darkChannel === 1) g = random(0, 35);
+    else b = random(0, 35);
   }
+
+  // add some randomness to prevent colors from being too systematic
+  colorVariance = 20;  // percentage
+  const maxShift = (255 * colorVariance) / 100;
+  r = constrain(r + random(-maxShift, maxShift), 0, 255);
+  g = constrain(g + random(-maxShift, maxShift), 0, 255);
+  b = constrain(b + random(-maxShift, maxShift), 0, 255);
 
   return {r, g, b};
 }
