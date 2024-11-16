@@ -1,16 +1,18 @@
 let g_droplets = [];
+let g_palette;
 
 function setup() {
   createCanvas(400, 400);
   background(220);
+  // g_palette = createColorPalette(createPaintColor());
 }
 
 function createSplatter(numDroplets, impactPoint) {
   let droplets = []
 
-  const palette = createColorPalette(createPaintColor());
+  g_palette = createColorPalette(createPaintColor());
   // const color = {r: 237, g: 34, b: 93};  // p5.js pink!
-  const color = palette.getColor();
+  const color = g_palette.getColor();
 
   const innerSpread = impactPoint.diameter * 0.7;  // spread droplets closer to center
   const outerSpread = impactPoint.diameter * 1.2;  // spread droplets further from center
