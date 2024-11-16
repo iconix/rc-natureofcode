@@ -2,7 +2,7 @@ let g_droplets = [];
 let g_palette;
 
 function setup() {
-  createCanvas(500, 500);
+  createCanvas(600, 600);
   background(220);
   // g_palette = createColorPalette(createPaintColor());
 }
