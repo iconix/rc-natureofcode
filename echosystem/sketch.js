@@ -44,7 +44,6 @@ function setup() {
   };
 
   try {
-    // TODO: fix sound
     setupSound();
     soundEnabled = true;
   } catch (e) {
