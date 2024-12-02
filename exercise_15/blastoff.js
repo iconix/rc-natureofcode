@@ -32,7 +32,7 @@ function draw() {
   fill(255);
   noStroke();
   textSize(12);
-  text(`Rocket Position: ${floor(g_rocket.position.x)}, ${floor(g_rocket.position.y)}\nVelocity: ${round(g_rocket.velocity.x, 1).toFixed(1)}, ${round(g_rocket.velocity.y, 1).toFixed(1)}`, 10, 20);
+  text(`Position: ${floor(g_rocket.position.x)}, ${floor(g_rocket.position.y)}\nVelocity: ${round(g_rocket.velocity.x, 1).toFixed(1)}, ${round(g_rocket.velocity.y, 1).toFixed(1)}`, 10, 20);
 }
 
 function keyPressed() {
@@ -110,9 +110,9 @@ function drawStation() {
 function drawStars() {
   // draw some reference stars in the background
   // calculate visible area bounds based on rocket position
-  let startX = floor((g_rocket.position.x - width/2) / 50) * 50 - 50;
+  let startX = floor((g_rocket.position.x - width / 2) / 50) * 50 - 50;
   let endX = startX + width + 100;
-  let startY = floor((g_rocket.position.y - height/2) / 50) * 50 - 50;
+  let startY = floor((g_rocket.position.y - height / 2) / 50) * 50 - 50;
   let endY = startY + height + 100;
 
   // draw stars in visible area
