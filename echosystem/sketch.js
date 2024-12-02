@@ -1,3 +1,5 @@
+// TODO: introduce oop - ghost, grid, user presence, sound (used by ghost)
+
 // ghost vars - draw
 let y = 0;
 let floatSpeed = 1;
@@ -5,11 +7,16 @@ let floatRange = 20;
 let baseY;
 let mouthSize = 0;
 let opacity = 255;
+let isVisible = true;
 
 // ghost vars - move
 let currentCell = { x: 0, y: 0 };
+let position;
+let velocity;               // aka speed
+let acceleration;
+let topSpeed = 8;
 let lastMoveTime = 0;
-let moveInterval = 2000;    // move every 2 seconds
+let moveInterval = 3000;    // move every 3 seconds
 
 // ghost vars - boo!
 let osc, amp, reverb;
@@ -27,27 +34,45 @@ const wobbleDepth = 0.5;
 const stopFadeTime = 0.1;
 
 // grid vars
-let gridSize = 5;
+let gridSize = 6;
 let cellSize;
 
+// user presence vars
+let waveRadius = 0;
+let waveGrowing = true;
+let mouseCell;
+let waveSpeed = 1;
+let maxWaveRadius;
+let colorShift = 0;
+
 function setup() {
-  createCanvas(400, 400);
+  createCanvas(600, 600);
+
+  // un-set mouse positions until user moves mouse
+  mouseX = undefined;
+  mouseY = undefined;
 
   cellSize = width / gridSize;
-
+  maxWaveRadius = cellSize * 0.75;  // wave fills most of cell but not overflow
   baseY = cellSize / 2;
   y = baseY;
 
+  // initialize starting cell
   currentCell = {
     x: floor(random(gridSize)),
     y: floor(random(gridSize))
   };
 
+  // initialize vectors for movement
+  position = getCellCenter(currentCell, cellSize);
+  velocity = createVector(0, 0);
+  acceleration = createVector(0, 0);
+
   try {
     setupSound();
     soundEnabled = true;
   } catch (e) {
-    console.log(`p5.sound failed to load: ${e}`)
+    console.log(`p5.sound failed to load: ${e}`);
   }
 }
 
@@ -70,20 +95,24 @@ function setupSound() {
 }
 
 function draw() {
-  background(220);
+  background(30);  // like a dark charcoal
+
   drawGrid();
+  drawUserPresence();
 
   let timeSinceMove = millis() - lastMoveTime;
   // start fading out halfway through the interval
   if (timeSinceMove > moveInterval / 2) {
     opacity = map(timeSinceMove, moveInterval / 2, moveInterval, 255, 0);
+    isVisible = opacity > 0;
   } else {
     opacity = 255;
+    isVisible = true;
     isBooPlaying = false;
   }
 
   if (timeSinceMove > moveInterval) {
-    moveGhost();
+    moveGhostToNewCell();
     lastMoveTime = millis();
     opacity = 255;
     if (!isBooPlaying) {
@@ -92,10 +121,18 @@ function draw() {
     }
   }
 
-  // calculate floating position (for animation)
+  if (isVisible && mouseIsInGrid()) moveGhostTowardsMouse();
+
+  // calculate floating animation
   let floatingY = sin(frameCount * 0.05) * floatRange;
-  drawGhost(currentCell.x * cellSize + cellSize/2,
-            currentCell.y * cellSize + cellSize/2 + floatingY);
+
+  // draw ghost at current position
+  drawGhost(position.x, position.y + floatingY);
+
+  // update color shift for magical effect
+  colorShift += 0.05;
+
+  drawInstructions();
 }
 
 function drawGrid() {
@@ -105,6 +142,64 @@ function drawGrid() {
     line(i * cellSize, 0, i * cellSize, height);
     line(0, i * cellSize, width, i * cellSize);
   }
+}
+
+function drawUserPresence() {
+  // update mouse cell position
+  mouseCell = {
+    x: floor(mouseX / cellSize),
+    y: floor(mouseY / cellSize)
+  };
+
+  // update wave radius
+  if (waveGrowing) {
+    waveRadius += waveSpeed;
+  } else {
+    waveRadius -= waveSpeed;
+  }
+
+  // reverse the growing direction at limits
+  if (waveRadius > maxWaveRadius || waveRadius < 0) {
+    waveGrowing = !waveGrowing;
+  }
+
+  drawMagicalEffect();
+}
+
+function drawMagicalEffect() {
+  // only draw if mouse is within grid
+  if (mouseIsInGrid()) {
+    // get center of current mouse cell
+    let cellCenter = getCellCenter(mouseCell, cellSize);
+
+    // draw the magical glow
+    drawMagicalGlow(cellCenter.x, cellCenter.y, waveRadius);
+
+    // draw the magical core
+    drawMagicalCore(cellCenter.x, cellCenter.y);
+  }
+}
+
+function drawMagicalGlow(x, y, r) {
+  // draw the glowing magical wave effect
+
+  let alpha = map(r, 0, cellSize * 0.75, 255, 0);  // fading glow effect
+  let waveColor = color(204 + sin(colorShift) * 50, 255, 204 + sin(colorShift) * 50, alpha);
+
+  push();
+  noFill();
+  stroke(waveColor);
+  strokeWeight(5);
+  ellipse(x, y, r * 2, r * 2);  // outer magical wave
+  pop();
+}
+
+function drawMagicalCore(x, y) {
+  // draw the core or center of the magical wave
+
+  fill(255, 255, 255, 180); // bright white core
+  noStroke();
+  ellipse(x, y, 30, 30);  // small core at the center
 }
 
 function drawGhost(x, y) {
@@ -138,8 +233,6 @@ function drawGhost(x, y) {
   circle(20, -10, 15);
 
   // booing mouth
-  fill(0, opacity);
-  noStroke();
   ellipse(0, 15, mouthSize, mouthSize);
 
   // add small white highlight in mouth
@@ -149,23 +242,60 @@ function drawGhost(x, y) {
   pop();
 }
 
-function moveGhost() {
+function drawInstructions() {
+  push();
+  fill(0, 180);  // semi-transparent black
+  noStroke();
+  rectMode(CENTER);
+  rect(width / 2, height - 20, 340, 30);
+
+  fill(255);
+  noStroke();
+  textSize(16);
+  textAlign(CENTER);
+  textStyle(BOLD);
+  text('Lure the \'ghost\' with your mouse!', width / 2, height - 20);
+  pop();
+}
+
+function moveGhostToNewCell() {
   let newX, newY;
 
   // make sure we never appear in the same cell twice in a row
   do {
     newX = floor(random(gridSize));
     newY = floor(random(gridSize));
-  } while (newX == currentCell.x && newY == currentCell.y);
+  } while (newX === currentCell.x && newY === currentCell.y);
 
   currentCell.x = newX;
   currentCell.y = newY;
+
+  // reset position to center of new cell
+  position = getCellCenter(currentCell, cellSize);
+
+  // reset velocity after teleport
+  velocity = createVector(0, 0);
+}
+
+function moveGhostTowardsMouse() {
+  // create vector pointing to center of mouse cell
+  let mouseCenter = getCellCenter(mouseCell, cellSize);
+
+  let dir = p5.Vector.sub(mouseCenter, position);
+
+  // set magnitude of acceleration
+  dir.normalize();
+  dir.mult(0.4);
+
+  // accelerate!
+  acceleration = dir;
+  velocity.add(acceleration);
+  velocity.limit(topSpeed);
+  position.add(velocity);
 }
 
 function playBoo() {
-  if (!soundEnabled) {
-    return;
-  }
+  if (!soundEnabled) return;
 
   osc.start();
   let time = 0;
@@ -192,4 +322,19 @@ function playBoo() {
       osc.stop(stopFadeTime);
     }
   }, frameMs);
+}
+
+function mouseIsInGrid() {
+  return mouseCell.x >= 0 && mouseCell.x < gridSize &&
+    mouseCell.y >= 0 && mouseCell.y < gridSize
+}
+
+function getCellCenter(cell, cellSize) {
+  // converts a grid cell position to the center point coordinates of that cell
+  // also considered naming this gridToWorldPosition
+
+  return createVector(
+    cell.x * cellSize + cellSize / 2,
+    cell.y * cellSize + cellSize / 2
+  );
 }
