@@ -14,7 +14,7 @@ let currentCell = { x: 0, y: 0 };
 let position;
 let velocity;               // aka speed
 let acceleration;
-let topSpeed = 8;
+let topSpeed = 6;
 let lastMoveTime = 0;
 let moveInterval = 3000;    // move every 3 seconds
 
@@ -283,9 +283,8 @@ function moveGhostTowardsMouse() {
 
   let dir = p5.Vector.sub(mouseCenter, position);
 
-  // set magnitude of acceleration
-  dir.normalize();
-  dir.mult(0.4);
+  // set magnitude of acceleration (normalize then scale)
+  dir.setMag(0.2);
 
   // accelerate!
   acceleration = dir;
