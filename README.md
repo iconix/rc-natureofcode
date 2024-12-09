@@ -8,6 +8,7 @@ my sketches while working through [the nature of code](https://natureofcode.com/
 0. [ecosystem project: supernatural echosystem](https://iconix.github.io/rc-natureofcode/echosystem/)
 1. [exercise 0.4: paint splatters](https://iconix.github.io/rc-natureofcode/exercise_04/)
 2. [exercise 1.5: blastoff](https://iconix.github.io/rc-natureofcode/exercise_15/)
+3. [exercise 2.1: helium balloon](https://iconix.github.io/rc-natureofcode/exercise_21/)
 
 
 # dev notes
