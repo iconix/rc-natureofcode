@@ -254,7 +254,7 @@ function drawInstructions() {
   textSize(16);
   textAlign(CENTER);
   textStyle(BOLD);
-  text('Lure the \'ghost\' with your mouse!', width / 2, height - 20);
+  text('attract the \'ghost\' with your mouse!', width / 2, height - 20);
   pop();
 }
 
